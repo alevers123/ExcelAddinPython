@@ -1,0 +1,7 @@
+python3
+python3-jinja2
+python3-flask
+python3-werkzeug
+python3-pandas
+python3-regex
+adduser
