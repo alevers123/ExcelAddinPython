@@ -9,28 +9,35 @@ services:
          UID: ${HOST_UID} 
          GID: ${HOST_GID}
          UNAME: ${HOST_UNAME}
-         BLA: "blub"
     depends_on:
       - dbg_web_server
     volumes:
       - ../../webapp:/home/${HOST_UNAME}/workspace/webapp
-    network_mode: bridge
     ports:
       - "9222"
+    networks:
+      - dbg_network
     stdin_open: true
     tty: true
     container_name: dev_container
   dbg_web_server:
     build:
       context: .
+      additional_contexts: 
+      - prv_certificate=../certs/private
+      - dbg_web_server=./debg_web_server
       target: debug
     volumes:
       - ../../webapp:/usr/src/app
-      - ../../certs/private:/etc/ssl/private/websrv
-    network_mode: bridge
     ports:
      - "8080:5000"
     container_name: dbg_web_server_container
+    networks:
+      - dbg_network
+networks:
+  dbg_network:
+    driver: bridge
+
   # prod_web_server:
   #   build:
   #    context: .

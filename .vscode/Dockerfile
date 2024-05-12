@@ -13,15 +13,15 @@ FROM base as develop
 ARG GID
 ARG UID 
 ARG UNAME 
-ARG BLA
-RUN echo ${BLA}
-RUN echo "${UNAME}, ${UID}, ${GID}" 
-RUN echo "hallo"
-RUN apt-get update && apt install -y sudo && apt install -y adduser &&\ 
+ARG WORKSP=/home/${UNAME}/workspace
+RUN echo ${WORKSP}
+RUN apt-get update && apt install -y sudo && apt install -y adduser && \ 
 groupadd -g ${GID} -o ${UNAME} && \
 sudo adduser --ingroup ${UNAME} -u ${UID} --disabled-password --gecos "" ${UNAME} && \
-echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
+echo "${UNAME} ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && mkdir ${WORKSP} && mkdir ${WORKSP}/.vscode 
+COPY  --from=vscode ./launch.json ${WORKSP}/.vscode/
 USER ${UNAME}
+WORKDIR ${WORKSP} 
 
 FROM base as debug
 # RUN pip install ptvsd debugpy
@@ -29,7 +29,11 @@ FROM base as debug
 ENV PYTHONDONTWRITEBYTECODE 1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED 1
-
+COPY --from=prv_certificate ./key.pem /etc/ssl/private/
+COPY --from=prv_certificate ./certificate.crt /etc/ssl/public
+RUN mkdir flask_context
+COPY --from=dbg_web_server ./.flaskenv /flask_context
+ENTRYPOINT [ "python3", "-m", "debugpy", "--listen", "0.0.0.0:5678",  ]
 # FROM base as prod
 # RUN pip install gunicorn
 # COPY . .
